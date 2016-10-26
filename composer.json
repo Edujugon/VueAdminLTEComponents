@@ -1,0 +1,11 @@
+{
+  "name": "edujugon/vue-adminLTE-components",
+  "description": "Set of Vue.js components with adminLTE.",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Eduardo Marcos",
+      "email": "edujugon@gmail.com"
+    }
+  ]
+}
