@@ -2,7 +2,7 @@
     <div class="box-body table-responsive">
         <div class="pull-right">
             <div class="box-body">
-                <button type="button" class="btn btn-info margin" data-toggle="modal" data-target="#myModal" v-on:click="createGroup">{{createGroupLabel}}</button>
+                <button type="button" class="btn btn-info margin" data-toggle="modal" data-target="#myModal">{{createGroupLabel}}</button>
                 <button type="button" class="btn bg-orange btn-flat margin">Total: {{total}} €</button>
             </div>
 
@@ -71,11 +71,30 @@
                     </div>
                     <div class="modal-body">
                         <div class="box-body">
+                            <div class="span6 pull-left" style="text-align:right">
+                                <p>{{invoiceAmountLabel}}: {{selected.length}}</p>
+                            </div>
                             <div class="span6 pull-right" style="text-align:right">
                                 <p>Total: {{total}} €</p>
                             </div>
-                            <div class="span6 pull-left" style="text-align:right">
-                                <p>{{invoiceAmountLabel}}: {{selected.length}}</p>
+                            <br><hr>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="input-group">
+                                        <label>{{dateStartLabel}}</label>
+                                        <input class="form-control" type="date" placeholder="dd/mm/yyyy" v-model="groupDateStart">
+                                    </div>
+                                    <!-- /input-group -->
+                                </div>
+                                <!-- /.col-lg-6 -->
+                                <div class="col-lg-6">
+                                    <div class="input-group">
+                                        <label>{{dateFinishLabel}}</label>
+                                        <input class="form-control" type="date" placeholder="dd/mm/yyyy" v-model="groupDateFinish">
+                                    </div>
+                                    <!-- /input-group -->
+                                </div>
+                                <!-- /.col-lg-6 -->
                             </div>
                             <br><hr>
                             <div class="center-block">
@@ -84,8 +103,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save changes</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">{{cancelLabel}}</button>
+                        <button type="button" class="btn btn-primary" v-on:click="createGroup">{{createGroupLabel}}</button>
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
@@ -109,7 +128,10 @@
             createGroupLabel:{},
             invoiceAmountLabel:{},
             enterGroupName:{},
-            modalTitle:{}
+            modalTitle:{},
+            cancelLabel:{},
+            dateStartLabel:{},
+            dateFinishLabel:{}
         },
         data: function () {
             return {
@@ -117,8 +139,9 @@
                 total:0,
                 selected:[],
                 groupName:'',
+                groupDateStart:null,
+                groupDateFinish:null,
                 modalBody:'',
-                groupName:'',
                 pagination: {
                     page: 1,
                     previous: false,
@@ -138,24 +161,27 @@
                     ++this.pagination.page;
                 }
 
-                this.$http.post('api/v1/tattoos?page='+ this.pagination.page).then(function(response){
-                    if(response.data.data)
+                this.$http.get('api/v1/tattoos/15/?page='+ this.pagination.page).then(function(response){
+                    if(response.data.data){
                         this.items =  response.data.data;
-                    this.pagination.next = response.data.next_page_url;
-                    this.pagination.previous = response.data.prev_page_url;
+                        this.pagination.next = response.data.next_page_url;
+                        this.pagination.previous = response.data.prev_page_url;
+                    }else console.log(response.data);
                 }, function(response){
                     console.log(response);
                 });
             },
             createGroup(){
-                var data = {groupName:this.groupName,ids:this.selected};
-                this.modalBody = this.createModalTemplate();
-                console.log(data);
-//                this.$http.post('api/v1/group',data).then(function (response) {
-//
-//                }, function () {
-//
-//                });
+                var data = {groupName:this.groupName,
+                    ids:this.selected,
+                    dateStart:this.groupDateStart,
+                    dateFinish:this.groupDateFinish,
+                };
+                this.$http.post('api/v1/group',data).then(function (response) {
+                    console.log(response.data);
+                }, function () {
+
+                });
             },
             changeSeleted: function (id,price) {
                 var index = this.selected.indexOf(id);
