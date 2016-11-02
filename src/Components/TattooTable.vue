@@ -56,10 +56,10 @@
         </table>
         <ul class="pager">
             <li class="previous" v-show="pagination.previous">
-                <a class="page-scroll" v-on:click="fechRecords('previous')">{{previousLabel}}</a>
+                <a role="button" class="page-scroll" v-on:click="fechRecords('previous')">{{previousLabel}}</a>
             </li>
             <li class="next" v-show="pagination.next">
-                <a class="page-scroll" v-on:click="fechRecords('next')">{{nextLabel}}</a>
+                <a role="button" class="page-scroll" v-on:click="fechRecords('next')">{{nextLabel}}</a>
             </li>
         </ul>
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog">
@@ -102,8 +102,9 @@
                             </div>
                         </div>
                     </div>
+                    <alert :can-be-closed=false v-if="messageError" title="Alerta!" :message="messageError"></alert>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">{{cancelLabel}}</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal" id="modalCancelButton">{{cancelLabel}}</button>
                         <button type="button" class="btn btn-primary" v-on:click="createGroup">{{createGroupLabel}}</button>
                     </div>
                 </div><!-- /.modal-content -->
@@ -142,6 +143,7 @@
                 groupDateStart:null,
                 groupDateFinish:null,
                 modalBody:'',
+                messageError:null,
                 pagination: {
                     page: 1,
                     previous: false,
@@ -161,7 +163,7 @@
                     ++this.pagination.page;
                 }
 
-                this.$http.get('api/v1/tattoos/15/?page='+ this.pagination.page).then(function(response){
+                this.$http.get('api/v1/tattoo/15/?page='+ this.pagination.page).then(function(response){
                     if(response.data.data){
                         this.items =  response.data.data;
                         this.pagination.next = response.data.next_page_url;
@@ -172,6 +174,7 @@
                 });
             },
             createGroup(){
+                this.messageError = null;
                 var data = {groupName:this.groupName,
                     ids:this.selected,
                     dateStart:this.groupDateStart,
@@ -179,8 +182,20 @@
                 };
                 this.$http.post('api/v1/group',data).then(function (response) {
                     console.log(response.data);
-                }, function () {
+                    if(response.data.success)
+                    {
+                        //Reload data
+                        this.fechRecords();
 
+                        //Close Modal
+                        document.getElementById('modalCancelButton').click();
+
+                    }else{
+                        this.messageError = response.data.message;
+                    }
+                }, function (response) {
+                    this.messageError = response.statusText;
+                    console.log(response);
                 });
             },
             changeSeleted: function (id,price) {
