@@ -2,7 +2,7 @@
     <div class="box-body table-responsive">
         <div class="pull-right">
             <div class="box-body">
-                <button type="button" class="btn btn-info margin" data-toggle="modal" data-target="#myModal">{{createGroupLabel}}</button>
+                <button type="button" class="btn btn-info margin" data-toggle="modal" data-target="#myModal" v-on:click="openModal">{{createGroupLabel}}</button>
                 <button type="button" class="btn bg-orange btn-flat margin">Total: {{total}} €</button>
             </div>
 
@@ -19,6 +19,7 @@
                 <th>{{photo}}</th>
                 <th>{{client}}</th>
                 <th>{{date}}</th>
+                <th>{{action}}</th>
             </tr>
             </thead>
             <tbody>
@@ -29,15 +30,26 @@
             </template>
             <tr v-else v-bind:class="{ info: amIChecked(item.id) }" v-for="item in items">
                 <input type="hidden" :value="item.id">
-                <td><input :checked="amIChecked(item.id)" type="checkbox" v-on:click="changeSeleted(item.id,item.price)"></td>
+                <td><input :disabled="item.group" :checked="amIChecked(item.id)" type="checkbox" v-on:click="changeSeleted(item.id,item.price)"></td>
                 <td v-if="item.group">{{item.group.name}}</td><td v-else></td>
                 <td>{{item.name}}</td>
                 <td>{{item.price}}</td>
                 <td>{{item.feedback}}</td>
-                <td>{{item.drawing}}</td>
-                <td>{{item.photo}}</td>
+                <td v-if="item.drawing">
+                    <a :href="item.drawing" data-toggle="lightbox">
+                        <img width="50" :src="item.drawing" class="img-circle">
+                    </a>
+                </td>
+                <td v-else></td>
+                <td v-if="item.photo">
+                    <a :href="item.photo" data-toggle="lightbox">
+                        <img width="50" :src="item.photo" class="img-circle">
+                    </a>
+                </td>
+                <td v-else></td>
                 <td>{{item.client}}</td>
                 <td>{{item.date}}</td>
+                <td><a :href="'tattoo/' + item.id"><i class="fa fa-edit"></i></a></td>
             </tr>
             </tbody>
             <tfoot>
@@ -51,6 +63,7 @@
                 <th>{{photo}}</th>
                 <th>{{client}}</th>
                 <th>{{date}}</th>
+                <th>{{action}}</th>
             </tr>
             </tfoot>
         </table>
@@ -124,6 +137,9 @@
             photo:{},
             client: {},
             date:{},
+            action:{
+                default:'Action'
+            },
             previousLabel:{},
             nextLabel:{},
             createGroupLabel:{},
@@ -182,7 +198,7 @@
                 };
                 this.$http.post('api/v1/group',data).then(function (response) {
                     console.log(response.data);
-                    if(response.data.success)
+                    if(response.data.ok)
                     {
                         //Reload data
                         this.fechRecords();
@@ -212,6 +228,9 @@
             },
             amIChecked: function (id) {
                 if (this.selected.indexOf(id) != -1) return true;
+            },
+            openModal(){
+                this.messageError = null;
             }
         },
         mounted() {
