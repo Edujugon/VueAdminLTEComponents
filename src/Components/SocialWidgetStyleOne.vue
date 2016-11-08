@@ -17,6 +17,8 @@
                     <li><a >{{totalInvoicesLabel}} <span class="pull-right badge bg-blue">{{totalInvoices}}</span></a></li>
                     <li><a >{{dateStartLabel}} <span class="pull-right badge bg-aqua">{{dateStart}}</span></a></li>
                     <li><a >{{dateFinishLabel}} <span class="pull-right badge bg-aqua">{{dateFinish}}</span></a></li>
+                    <li class="text-center"><a role="button" v-on:click="edit">{{editLabel}}</a></li>
+                    <li class="text-center"><a role="button" v-on:click="sendInvoices">{{sendInvoicesLabel}}</a></li>
                 </ul>
             </div>
         </div>
@@ -40,7 +42,20 @@
             dateStartLabel:{},
             dateFinishLabel:{},
             dateStart:{},
-            dateFinish:{}
+            dateFinish:{},
+            editLabel:{
+                default:'Edit'
+            },
+            sendInvoicesLabel:{},
+            groupId:{}
+        },
+        methods:{
+            edit(){
+                window.location.href = "/group/" + this.groupId + "/edit";
+            },
+            sendInvoices(){
+
+            }
         },
         mounted(){
             console.log('Social Widget Style One Ready');
