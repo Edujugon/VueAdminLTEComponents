@@ -11,15 +11,27 @@
             <thead>
             <tr>
                 <th></th>
-                <th>{{groupLabel}}</th>
-                <th>{{tattooReference}}</th>
-                <th>{{price}}</th>
-                <th>{{feedback}}</th>
-                <th>{{drawing}}</th>
+                <th role="button" v-on:click="orderBy('group_id')">{{groupLabel}}</th>
+                <th role="button" v-on:click="orderBy('name')">{{tattooReference}}</th>
+                <th role="button" v-on:click="orderBy('price')">{{price}}</th>
+                <th role="button" v-on:click="orderBy('feedback')">{{feedback}}</th>
+                <th >{{drawing}}</th>
                 <th>{{photo}}</th>
-                <th>{{client}}</th>
-                <th>{{date}}</th>
+                <th role="button" v-on:click="orderBy('client')">{{client}}</th>
+                <th role="button" v-on:click="orderBy('date')">{{date}}</th>
                 <th>{{action}}</th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="name" type="text" :placeholder="searchLabel"></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="price" type="text" :placeholder="searchLabel"></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="feedback" type="text" :placeholder="searchLabel"></th>
+                <th></th>
+                <th></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="client" type="text" :placeholder="searchLabel"></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="date" type="text" :placeholder="searchLabel"></th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -49,20 +61,32 @@
                 <td v-else></td>
                 <td>{{item.client}}</td>
                 <td>{{item.date}}</td>
-                <td><a :href="'tattoo/' + item.id"><i class="fa fa-edit"></i></a></td>
+                <td><a :href="'tattoo/' + item.id + '/edit'"><i class="fa fa-edit"></i></a></td>
             </tr>
             </tbody>
             <tfoot>
             <tr>
                 <th></th>
-                <th>{{groupLabel}}</th>
-                <th>{{tattooReference}}</th>
-                <th>{{price}}</th>
-                <th>{{feedback}}</th>
-                <th>{{drawing}}</th>
+                <th></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="name" type="text" :placeholder="searchLabel"></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="price" type="text" :placeholder="searchLabel"></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="feedback" type="text" :placeholder="searchLabel"></th>
+                <th></th>
+                <th></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="client" type="text" :placeholder="searchLabel"></th>
+                <th><input v-on:keyup="search" name="searchInputs" v-on:click="cleanInputs" id="date" type="text" :placeholder="searchLabel"></th>
+                <th></th>
+            </tr>
+            <tr>
+                <th></th>
+                <th role="button" v-on:click="orderBy('group_id')">{{groupLabel}}</th>
+                <th role="button" v-on:click="orderBy('name')">{{tattooReference}}</th>
+                <th role="button" v-on:click="orderBy('price')">{{price}}</th>
+                <th role="button" v-on:click="orderBy('feedback')">{{feedback}}</th>
+                <th >{{drawing}}</th>
                 <th>{{photo}}</th>
-                <th>{{client}}</th>
-                <th>{{date}}</th>
+                <th role="button" v-on:click="orderBy('client')">{{client}}</th>
+                <th role="button" v-on:click="orderBy('date')">{{date}}</th>
                 <th>{{action}}</th>
             </tr>
             </tfoot>
@@ -140,6 +164,7 @@
             action:{
                 default:'Action'
             },
+            searchLabel:{},
             previousLabel:{},
             nextLabel:{},
             createGroupLabel:{},
@@ -164,7 +189,19 @@
                     page: 1,
                     previous: false,
                     next: false
-                }
+                },
+                orderByField:'date',
+                orderByDir:'DESC',
+                orderByFields:{
+                    group_id:false,
+                    name:false,
+                    price:false,
+                    feedback:false,
+                    client:false,
+                    date:false,
+                },
+                searchTerm:'',
+                searchColumn:''
             }
         },
         computed:{
@@ -179,7 +216,7 @@
                     ++this.pagination.page;
                 }
 
-                this.$http.get('api/v1/tattoo/15/?page='+ this.pagination.page).then(function(response){
+                this.$http.get('api/v1/tattoo/'+this.orderByField+'/'+this.orderByDir+'/15/'+this.searchColumn+'/'+this.searchTerm+'?page='+ this.pagination.page).then(function(response){
                     if(response.data.data){
                         this.items =  response.data.data;
                         this.pagination.next = response.data.next_page_url;
@@ -231,6 +268,38 @@
             },
             openModal(){
                 this.messageError = null;
+            },
+            orderBy(field){
+                this.orderByField = field;
+
+                if(this.orderByFields[field])
+                    this.orderByDir = 'DESC';
+                else this.orderByDir = 'ASC';
+
+                this.orderByFields[field] =!this.orderByFields[field];
+
+                //Set pagination to first page
+                this.pagination.page = 1;
+
+                this.fechRecords();
+            },
+            search(event){
+                this.searchTerm = event.target.value;
+                this.searchColumn = event.target.id;
+
+                //Set pagination to first page
+                this.pagination.page = 1;
+
+                this.fechRecords();
+            },
+            cleanInputs(){
+                document.getElementsByName('searchInputs').forEach(function(element) {
+                    element.value = '';
+                });
+                if(0 <= this.items.length){
+                    this.searchTerm='';
+                    this.fechRecords();
+                }
             }
         },
         mounted() {
