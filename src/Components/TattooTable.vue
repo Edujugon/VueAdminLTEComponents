@@ -40,7 +40,7 @@
                     <h3>No Records Yet!</h3>
                 </div>
             </template>
-            <tr v-else v-bind:class="{ info: amIChecked(item.id) }" v-for="item in items">
+            <tr v-else v-bind:class="{ info: amIChecked(item.id) }" v-for="(item,index) in items">
                 <input type="hidden" :value="item.id">
                 <td><input :disabled="item.group" :checked="amIChecked(item.id)" type="checkbox" v-on:click="changeSeleted(item.id,item.price)"></td>
                 <td v-if="item.group">{{item.group.name}}</td><td v-else></td>
@@ -61,7 +61,10 @@
                 <td v-else></td>
                 <td>{{item.client}}</td>
                 <td>{{item.date}}</td>
-                <td><a :href="'tattoo/' + item.id + '/edit'"><i class="fa fa-edit"></i></a></td>
+                <td>
+                    <a role="button" :href="'tattoo/' + item.id + '/edit'"><i class="fa fa-edit"></i></a>
+                    <a role="button" v-on:click="removeTattoo(item.id,index)"><i class="fa fa-remove text-red"></i></a>
+                </td>
             </tr>
             </tbody>
             <tfoot>
@@ -228,13 +231,16 @@
             },
             createGroup(){
                 this.messageError = null;
+
+                if(this.noEnoughData()) return;
+
+
                 var data = {groupName:this.groupName,
                     ids:this.selected,
                     dateStart:this.groupDateStart,
                     dateFinish:this.groupDateFinish,
                 };
                 this.$http.post('api/v1/group',data).then(function (response) {
-                    console.log(response.data);
                     if(response.data.ok)
                     {
                         //Reload data
@@ -243,6 +249,9 @@
                         //Close Modal
                         document.getElementById('modalCancelButton').click();
 
+                        //Redirect to groups
+                        window.location = '/group';
+
                     }else{
                         this.messageError = response.data.message;
                     }
@@ -250,6 +259,18 @@
                     this.messageError = response.statusText;
                     console.log(response);
                 });
+            },
+            noEnoughData(){
+                if(!this.groupName)
+                {
+                    this.messageError = 'Rellene el nombre del grupo';
+                    return true;
+
+                }else if(this.selected.length <= 0)
+                {
+                    this.messageError = 'Debe elegir al menos una factura';
+                    return true;
+                }
             },
             changeSeleted: function (id,price) {
                 var index = this.selected.indexOf(id);
@@ -300,6 +321,37 @@
                     this.searchTerm='';
                     this.fechRecords();
                 }
+            },
+            removeTattoo(id,index)
+            {
+                var self = this;
+                swal({
+                    title: 'El tattoo se va a eliminar',
+                    text: 'No se podrá recuperar posteriormente',
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Si, eliminalo!',
+                    cancelButtonText: 'No, dejalo'
+                }).then(function() {
+                    self.$http.delete('api/v1/tattoo/'+id).then(function (response) {
+                        if(response.data.ok)
+                        {
+                            self.items.splice(index, 1);
+                            swal(
+                                'Eliminado!',
+                                '',
+                                'success'
+                            )
+                        }
+                    },function (response) {
+                        swal(
+                            'No se pudo realizar la operación',
+                            response.data.message,
+                            'error'
+                        )
+                        console.log(response.data.message);
+                    });
+                });
             }
         },
         mounted() {
